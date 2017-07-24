@@ -1,0 +1,97 @@
+<html>
+	<head>
+	</head>
+
+	<body>
+		<p>This contains the client side script from socket.io/docs</p>
+		<div id="message-contents" style="border: 1px solid black; height: 300px;">
+			
+		</div>
+		<form id="message-form">
+  		 	<input type="text" name="message" id="message" />
+			<input type="submit" value="Send">
+		</form>
+		<script src="/socket.io.js"></script>
+		<script>
+let messageObj = document.getElementById("message")
+let messageFormObj = document.getElementById("message-form")
+let messageContentsObj = document.getElementById("message-contents")
+let messages = []
+			
+const makeId = (len = 32 ) => {
+	let text = "";
+	let possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+	for (let i = 0; i < len; i++)
+	 text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+	return text;
+}
+
+let thisUserId = makeId( 32 )
+
+let socket = io().connect('http://localhost:3000/');
+
+
+
+let appendMessageAndRender = ( data ) => {
+	console.log("rec'd message")
+	// console.log( data )
+	messages = [...messages, data]
+	render()
+	
+}
+
+let render = () => {
+	messageContentsObj.innerHTML = ""
+	
+	messages.map((m) => {
+		messageContentsObj.innerHTML += `<div class="${ m.user_id == thisUserId ? "own-message" : "other-message"}">${ m.contents }</div>`
+	})
+}
+
+
+// the incoming
+socket.on("message-out", appendMessageAndRender)
+
+socket.on('news', function (data) {
+	console.log(data);
+	socket.emit('my other event', { my: 'data' });
+});
+
+
+// the outgoing
+messageFormObj.addEventListener("submit", (evt) => {
+	console.log("submitting")
+	let data = { user_id: thisUserId, contents: messageObj.value }
+	
+	appendMessageAndRender( data )
+	socket.emit('message-in', data);
+	
+	// clear field
+	messageObj.value = "";
+	evt.preventDefault();
+	return false;
+})
+
+
+		</script>
+
+
+<style type="text/css" media="screen">
+	.own-message {
+		background-color: #69c;
+		text-align: right;
+		margin: 5px; 
+		padding: 5px;
+	}
+		
+	.other-message {
+		background-color: #ccc;
+		text-align: left;
+		margin: 5px; 
+		padding: 5px;
+	}
+</style>
+	</body>
+</html>
