@@ -61,7 +61,8 @@ io.on('connection', function (socket) {
 	});
 });
 
-server.listen(3000, function () {
+// Heroku dynamically assigns your app a port, so you can't set the port to a fixed number. Heroku adds the port to the env, so you can pull it from there. Switch your listen to this:
+server.listen(process.env.PORT || 3000, function () {
   console.log('Example app listening on port 3000!')
 })
 
