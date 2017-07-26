@@ -1,24 +1,31 @@
 <html>
 	<head>
-		<title>Message</title>
+		<title>Socket Messanger</title>
 		<script src="/socket.io.js"></script>
 	</head>
 
 	<body>
-		<h1>Chat</h1>
-		<div id="message-contents">
-			
-		</div>
+		<h1>Socket Messenger</h1>
+		<div id="message-contents"></div>
+		
 		<form id="message-form">
   		 	<input class="message-textfield" type="text" name="message" id="message" />
 			<input type="submit" value="Send">
 		</form>
 		
+		<div>
+			<h5>Users</h5>
+			<div id="client-list"></div>
+		</div>
+		
 		<script>
 let messageTextfieldObj = document.getElementById("message")
 let messageFormObj = document.getElementById("message-form")
 let messageContentsObj = document.getElementById("message-contents")
+let clientListObj = document.getElementById("client-list")
+			
 let messages = []
+let clientIds = []
 			
 const makeId = (len = 32 ) => {
 	let text = "";
@@ -37,11 +44,12 @@ let socket = io().connect();
 
 
 let appendMessageAndRender = ( data ) => {
-	console.log("rec'd message")
+	
+	console.log("rec'd message from the server")
 	// console.log( data )
 	messages = [...messages, data]
-	render()
-	
+	clientIds = data.client_ids ? data.client_ids : clientIds 
+	render()	
 }
 
 let render = () => {
@@ -63,6 +71,13 @@ let render = () => {
 	
 		messageContentsObj.innerHTML += `<div class="${ userClass }">${ m.contents }</div>`
 	})
+	
+	clientListObj.innerHTML = ""
+	
+	clientIds.map( clientId => {
+		clientListObj.innerHTML += `<p class="user-${ clientId == thisUserId ? "me" : "other"}">${ clientId }</p>`
+	})
+	
 }
 
 // ============================================================================
@@ -132,6 +147,13 @@ messageFormObj.addEventListener("submit", (evt) => {
 		height: 30px;
 	}
 	
+	.user-me {
+		color: red;
+	}
+	
+	.user-other {
+		
+	}
 	#message-contents {
 		border: 1px solid black; height: 300px;
 		overflow: hidden;

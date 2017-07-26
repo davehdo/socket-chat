@@ -30,29 +30,49 @@ app.get('/socket.io.js', function (req, res) {
 });
 
 let messages = []
+let clientIds = []
+
 
 // http://localhost:3000/socket.io/?EIO=3&transport=polling&t=Lrluz_S
 io.on('connection', function (socket) {
 	// socket.emit('news', { hello: 'world - this was sent from the server' });
-	console.log(`A user has joined the conversation`)
+	console.log(`A user has joined the conversation, await user to self identify`)
 
-	// socket.to("thread").emit("message-out", {user_id: "admin", contents: `User ${} joined the room`})
-	socket.join("thread")
-
+	// when user sends identification, join the room, and broadcast their entry to the room
 	socket.on("notify-identity", (data) => {
 		socket.userId = data.user_id
 		console.log(`User is ${ socket.userId }`)
 		
+		socket.join("thread")
+		clientIds = [...clientIds, data.user_id]
+
+		// notify the user 
+		socket.emit("message-out", {
+			user_id: "undefined", 
+			client_ids: clientIds, 
+			contents: `Welcome. There are now ${clientIds.length} people in this conversation.`,
+		})
+		
+		// notify the room
 		socket.to("thread").emit( "message-out", {
 			user_id: undefined,
-			contents: `User ${ socket.userId } has joined the conversation`
+			contents: `User ${ socket.userId } has joined the conversation. There are now ${clientIds.length} people.`,
+			client_ids: clientIds,
 		})
 	})
-
+	
+	// when a user leaves, broadcast it
 	socket.on("disconnect", (reason) => {
-	  socket.to("thread").emit("message-out", {user_id: undefined, contents: `User ${ socket.userId } has disconnected`})
+		leavingIndex = clientIds.indexOf( socket.userId )
+		clientIds = [...clientIds.slice(0, leavingIndex), ...clientIds.slice(leavingIndex + 1)]
+
+		socket.to("thread").emit("message-out", {
+			user_id: undefined, 
+			contents: `User ${ socket.userId } has disconnected. There are now ${ clientIds.length } people in this conversation.`,
+	  		client_ids: clientIds })
 	})
 
+	// when a message comes in, broadcast it
 	socket.on('message-in', function (data) {
 	  messages = [...messages, data]
 	  // console.log("rec'd a message from a client")
