@@ -33,18 +33,32 @@ let messages = []
 
 // http://localhost:3000/socket.io/?EIO=3&transport=polling&t=Lrluz_S
 io.on('connection', function (socket) {
-  socket.emit('news', { hello: 'world - this was sent from the server' });
-  
-  // socket.to("thread").emit("message-out", {user_id: "admin", contents: `User ${} joined the room`})
-  
-  socket.join("thread")
-  
-  socket.on('message-in', function (data) {
+	// socket.emit('news', { hello: 'world - this was sent from the server' });
+	console.log(`A user has joined the conversation`)
+
+	// socket.to("thread").emit("message-out", {user_id: "admin", contents: `User ${} joined the room`})
+	socket.join("thread")
+
+	socket.on("notify-identity", (data) => {
+		socket.userId = data.user_id
+		console.log(`User is ${ socket.userId }`)
+		
+		socket.to("thread").emit( "message-out", {
+			user_id: undefined,
+			contents: `User ${ socket.userId } has joined the conversation`
+		})
+	})
+
+	socket.on("disconnect", (reason) => {
+	  socket.to("thread").emit("message-out", {user_id: undefined, contents: `User ${ socket.userId } has disconnected`})
+	})
+
+	socket.on('message-in', function (data) {
 	  messages = [...messages, data]
 	  // console.log("rec'd a message from a client")
 	  socket.to("thread").emit("message-out", data )
-    // console.log(data);
-  });
+	 // console.log(data);
+	});
 });
 
 server.listen(3000, function () {

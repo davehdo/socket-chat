@@ -75,10 +75,9 @@ socket.on('news', function (data) {
 });
 
 socket.on('connect', () => {
-	socket.emit( "message-in", {
-		user_id: undefined,
-		contents: `User ${ thisUserId } has joined the conversation`
-	})
+	
+	socket.emit( "notify-identity", { user_id: thisUserId })
+	
 });
 
 // ============================================================================
