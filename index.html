@@ -10,12 +10,12 @@
 			
 		</div>
 		<form id="message-form">
-  		 	<input class="message-text-field" type="text" name="message" id="message" />
+  		 	<input class="message-textfield" type="text" name="message" id="message" />
 			<input type="submit" value="Send">
 		</form>
 		
 		<script>
-let messageTextFieldObj = document.getElementById("message")
+let messageTextfieldObj = document.getElementById("message")
 let messageFormObj = document.getElementById("message-form")
 let messageContentsObj = document.getElementById("message-contents")
 let messages = []
@@ -30,7 +30,7 @@ const makeId = (len = 32 ) => {
 	return text;
 }
 
-let thisUserId = makeId( 32 )
+let thisUserId = makeId( 16 )
 
 let socket = io().connect('http://localhost:3000/');
 
@@ -46,9 +46,22 @@ let appendMessageAndRender = ( data ) => {
 
 let render = () => {
 	messageContentsObj.innerHTML = ""
-	
+	let userClass
+
 	messages.map((m) => {
-		messageContentsObj.innerHTML += `<div class="${ m.user_id == thisUserId ? "own-message" : "other-message"}">${ m.contents }</div>`
+	
+		switch( m.user_id ) {
+		case thisUserId:
+			userClass = "own-message";
+			break;
+		case undefined: 
+			userClass = "admin-message";
+			break;
+		default:
+			userClass = "other-message";
+		}
+	
+		messageContentsObj.innerHTML += `<div class="${ userClass }">${ m.contents }</div>`
 	})
 }
 
@@ -61,19 +74,26 @@ socket.on('news', function (data) {
 	socket.emit('my other event', { my: 'data' });
 });
 
+socket.on('connect', () => {
+	socket.emit( "message-in", {
+		user_id: undefined,
+		contents: `User ${ thisUserId } has joined the conversation`
+	})
+});
+
 // ============================================================================
 // ==============================  the outgoing  ==============================
 messageFormObj.addEventListener("submit", (evt) => {
 	// console.log("submitting")
-	if (messageTextFieldObj.value.trim() != "") {		
-		let data = { user_id: thisUserId, contents: messageTextFieldObj.value }
+	if (messageTextfieldObj.value.trim() != "") {		
+		let data = { user_id: thisUserId, contents: messageTextfieldObj.value }
 	
 		appendMessageAndRender( data )
 		socket.emit('message-in', data);
 	
 		// clear field
-		messageTextFieldObj.value = "";
-		messageTextFieldObj.focus();
+		messageTextfieldObj.value = "";
+		messageTextfieldObj.focus();
 		
 	}
 	
@@ -102,7 +122,13 @@ messageFormObj.addEventListener("submit", (evt) => {
 		padding: 6px;
 	}
 	
-	.message-text-field {
+	.admin-message {
+		text-align: left;
+		margin: 5px; 
+		padding: 6px;
+	}
+	
+	.message-textfield {
 		width: 550px;
 		height: 30px;
 	}

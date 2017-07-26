@@ -1,14 +1,6 @@
 // const express = require('express')
 // const app = express()
 
-// app.get('/', function (req, res) {
-//   res.send('Hello World!')
-// })
-//
-// app.listen(3000, function () {
-//   console.log('Example app listening on port 3000!')
-// })
-
 
 var app = require('express')();
 // framework for webpages
@@ -29,8 +21,6 @@ var io = require('socket.io')(server, {
 
 
 
-// server.listen(80);
-//
 app.get('/', function (req, res) {
   res.sendFile(__dirname + '/index.html');
 });
@@ -44,6 +34,8 @@ let messages = []
 // http://localhost:3000/socket.io/?EIO=3&transport=polling&t=Lrluz_S
 io.on('connection', function (socket) {
   socket.emit('news', { hello: 'world - this was sent from the server' });
+  
+  // socket.to("thread").emit("message-out", {user_id: "admin", contents: `User ${} joined the room`})
   
   socket.join("thread")
   
