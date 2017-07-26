@@ -1,19 +1,21 @@
 <html>
 	<head>
+		<title>Message</title>
+		<script src="/socket.io.js"></script>
 	</head>
 
 	<body>
-		<p>This contains the client side script from socket.io/docs</p>
-		<div id="message-contents" style="border: 1px solid black; height: 300px;">
+		<h1>Chat</h1>
+		<div id="message-contents">
 			
 		</div>
 		<form id="message-form">
-  		 	<input type="text" name="message" id="message" />
+  		 	<input class="message-text-field" type="text" name="message" id="message" />
 			<input type="submit" value="Send">
 		</form>
-		<script src="/socket.io.js"></script>
+		
 		<script>
-let messageObj = document.getElementById("message")
+let messageTextFieldObj = document.getElementById("message")
 let messageFormObj = document.getElementById("message-form")
 let messageContentsObj = document.getElementById("message-contents")
 let messages = []
@@ -50,8 +52,8 @@ let render = () => {
 	})
 }
 
-
-// the incoming
+// ============================================================================
+// ==============================  the incoming  ==============================
 socket.on("message-out", appendMessageAndRender)
 
 socket.on('news', function (data) {
@@ -59,17 +61,23 @@ socket.on('news', function (data) {
 	socket.emit('my other event', { my: 'data' });
 });
 
-
-// the outgoing
+// ============================================================================
+// ==============================  the outgoing  ==============================
 messageFormObj.addEventListener("submit", (evt) => {
-	console.log("submitting")
-	let data = { user_id: thisUserId, contents: messageObj.value }
+	// console.log("submitting")
+	if (messageTextFieldObj.value.trim() != "") {		
+		let data = { user_id: thisUserId, contents: messageTextFieldObj.value }
 	
-	appendMessageAndRender( data )
-	socket.emit('message-in', data);
+		appendMessageAndRender( data )
+		socket.emit('message-in', data);
 	
-	// clear field
-	messageObj.value = "";
+		// clear field
+		messageTextFieldObj.value = "";
+		messageTextFieldObj.focus();
+		
+	}
+	
+	// prevent default form submission
 	evt.preventDefault();
 	return false;
 })
@@ -81,16 +89,30 @@ messageFormObj.addEventListener("submit", (evt) => {
 <style type="text/css" media="screen">
 	.own-message {
 		background-color: #69c;
+		color: white;
 		text-align: right;
 		margin: 5px; 
-		padding: 5px;
+		padding: 6px;
 	}
 		
 	.other-message {
 		background-color: #ccc;
 		text-align: left;
 		margin: 5px; 
-		padding: 5px;
+		padding: 6px;
+	}
+	
+	.message-text-field {
+		width: 550px;
+		height: 30px;
+	}
+	
+	#message-contents {
+		border: 1px solid black; height: 300px;
+		overflow: hidden;
+		width: 600px;
+		display: table-cell;
+		vertical-align: bottom;
 	}
 </style>
 	</body>
